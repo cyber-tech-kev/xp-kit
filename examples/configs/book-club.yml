@@ -1,0 +1,33 @@
+# Example: a book club. Coin-shaped badges, warm custom colors, no seasons.
+group:
+  name: Riverside Readers
+  handle: riverside_readers
+  tagline: read, discuss, host. every page counts.
+  owner: your-github-org
+  repo: xp
+officers: [your-username]
+theme:
+  accent: "#E8B86B"
+  bg: "#120E0A"
+  panel: "#1A140F"
+  line: "#2E241B"
+  text: "#EDE3D6"
+  muted: "#A39382"
+  badge_bg: "#1A140F"
+  shape: coin
+sources:
+  attendance: { xp: 10, unique: true, label: "came to a meeting" }
+  finished:   { xp: 30, unique: true, label: "finished the book" }
+  hosted:     { xp: 50, unique: true, label: "hosted a discussion" }
+  review:     { xp: 20, unique: true, label: "wrote a review" }
+  award:      { xp: null, unique: false, label: "organizer award" }
+levels:
+  - { name: browser,   min: 0,   color: gray }
+  - { name: reader,    min: 100, color: "#C98A5A" }
+  - { name: bookworm,  min: 300, color: "#B5654A" }
+  - { name: librarian, min: 700, color: amber }
+badges:
+  page_turner: { icon: book, color: "#C98A5A", metric: count, sources: [finished], tiers: [3, 10, 25], desc: "Books finished" }
+  host:        { icon: chat, color: "#7FA36B", metric: count, sources: [hosted], tiers: [1, 3, 6], desc: "Discussions hosted" }
+  critic:      { icon: heart, color: "#C46A7A", metric: count, sources: [review], tiers: [1, 5, 15], desc: "Reviews written" }
+  regular:     { icon: bars, color: "#E8B86B", metric: streak, tiers: [3, 6, 12], desc: "Meetings in a row" }

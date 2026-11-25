@@ -1,0 +1,90 @@
+name: build-and-deploy
+
+# Rebuilds the leaderboard + badge SVGs and deploys to GitHub Pages,
+# then posts level-ups and new badges to Discord.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "xp-config.yml"
+      - "scripts/**"
+      - "icons/**"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:   # the award/join/dispatch workflows trigger this after writing the ledger
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # A brand-new copy of the template hasn't run setup.sh yet: skip quietly instead of failing.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.c.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: c
+        run: |
+          if grep -Eq '^\s*owner:\s*""' xp-config.yml; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Not set up yet. Run ./setup.sh (see PLAYBOOK.md) and this will deploy."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: python scripts/xp.py validate
+      - name: Build site
+        run: |
+          SITE=$(python -c "import sys;sys.path.insert(0,'scripts');import xp;print(xp.load_config(xp.ROOT)['group']['site_url'])")
+          python scripts/xp.py build --out _site --prev-url "$SITE/state.json" --announce-file announce.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: announcements
+          path: announce.json
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  announce:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - uses: actions/download-artifact@v4
+        with:
+          name: announcements
+      - name: Post to Discord
+        env:
+          DISCORD_WEBHOOK_XP: ${{ secrets.DISCORD_WEBHOOK_XP }}
+        run: python scripts/xp.py announce --file announce.json

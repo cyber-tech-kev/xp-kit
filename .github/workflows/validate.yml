@@ -1,0 +1,27 @@
+name: validate
+
+# Checks config and custom icons on every pull request, so a broken config or an unsafe
+# LLM-generated icon can't be merged. Failed checks list the exact problems in the run log.
+on:
+  pull_request:
+    paths:
+      - "xp-config.yml"
+      - "icons/**"
+      - "scripts/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: Validate config, icons and ledger
+        run: python scripts/xp.py validate
+      - name: Build a test site
+        run: python scripts/xp.py build --out _site

@@ -1,0 +1,82 @@
+# xp-kit config. Everything about your XP system lives here.
+# Change it, push, and the whole board is rebuilt from the ledger.
+# Want help? Paste PROMPTS.md prompt #1 into any LLM to generate this file for your group.
+# Check your edits locally with:  python scripts/xp.py validate
+
+group:
+  name: My Club                       # shown in page titles and badge alt text
+  handle: my_club                     # shown as "> my_club" on level badges (max 24 chars)
+  tagline: earn xp by showing up, helping out and building things. levels and badges update automatically.
+  owner: ""                           # GitHub user or org that owns this repo (setup.sh fills this in)
+  repo: xp                            # this repo's name
+  site_url: ""                        # leave blank for https://<owner>.github.io/<repo>
+  home_url: ""                        # optional "<- home" link, e.g. your club website
+
+# GitHub usernames allowed to run /award. Keep at least two, and update when leadership changes.
+officers: []
+
+# Look and feel. Colors are hex. shape is the default for every badge: shield, hex or coin.
+theme:
+  accent: "#5DCAA5"
+  bg: "#07090C"
+  panel: "#0B0F14"
+  line: "#1C2128"
+  text: "#D6D9DE"
+  muted: "#8B9098"
+  badge_bg: "#0B0F14"
+  shape: shield
+
+# Optional seasons (semesters, quarters, years). Adds a "this season" leaderboard tab.
+# Remove the list entirely to only show all-time.
+seasons:
+  - { name: "Spring 2027", start: 2027-01-15, end: 2027-05-15 }
+
+# Largest single award allowed (stops typos like 5000 instead of 50).
+max_award: 500
+
+# What earns XP.
+#   xp:     default points. null = organizer picks the amount each time.
+#   unique: true = one award per member per ref (no double-counting the same event).
+#   label:  shown in activity feeds.
+sources:
+  attendance: { xp: 10,   unique: true,  label: "attended a meeting" }
+  helped:     { xp: 15,   unique: true,  label: "helped run an event" }
+  project:    { xp: 50,   unique: true,  label: "shipped a project" }
+  presented:  { xp: 40,   unique: true,  label: "gave a talk" }
+  award:      { xp: null, unique: false, label: "organizer award" }
+  correction: { xp: null, unique: false, label: "correction" }     # negative amounts allowed
+
+# Level ladder, lowest first. First level must start at 0.
+# Colors: red orange amber yellow green teal blue purple pink gray, or any hex like "#3FA9F5".
+levels:
+  - { name: newcomer,  min: 0,    color: gray }
+  - { name: regular,   min: 100,  color: teal }
+  - { name: builder,   min: 300,  color: blue }
+  - { name: veteran,   min: 700,  color: purple }
+  - { name: legend,    min: 1500, color: amber }
+
+# Achievement badges.
+#   icon:   a built-in (drop prompt flag bars crosshair nodes star bolt book code heart trophy
+#           wrench mic chat rocket) or your own file at icons/<name>.svg (see PROMPTS.md #2)
+#   color:  palette name or hex
+#   shape:  optional, overrides theme.shape for this badge
+#   metric: count         = how many events from `sources` the member has
+#           streak        = longest run of consecutive meetings attended (needs `attendance`)
+#           joined_before = joined on or before `date` (a one-time "founding member" badge)
+#   tiers:  one number = one-time badge; three numbers = bronze / silver / gold
+badges:
+  regular:
+    { icon: bars, color: green, metric: streak, tiers: [3, 6, 10],
+      desc: "Meetings attended in a row" }
+  helper:
+    { icon: heart, color: pink, metric: count, sources: [helped], tiers: [1, 5, 15],
+      desc: "Helped run events" }
+  builder:
+    { icon: rocket, color: blue, metric: count, sources: [project], tiers: [1, 3, 6],
+      desc: "Shipped projects" }
+  speaker:
+    { icon: mic, color: amber, metric: count, sources: [presented], tiers: [1, 3, 5],
+      desc: "Gave talks" }
+  founder:
+    { icon: star, color: purple, metric: joined_before, date: 2027-02-01, tiers: [1],
+      desc: "Joined in the first month" }
